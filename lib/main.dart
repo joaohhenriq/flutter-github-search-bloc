@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'blocs/search_bloc.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -9,6 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       home: MyHomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -19,8 +22,30 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  SearchBloc _searchBloc;
+
+  // initState executa somente uma vez, antes do componente ser montado
+  @override
+  void initState() {
+    _searchBloc = new SearchBloc();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Github Search"),
+        centerTitle: true,
+      ),
+      body: ListView(
+        children: <Widget>[
+//          _textField
+        ],
+      ),
+    );
   }
+
+
 }
