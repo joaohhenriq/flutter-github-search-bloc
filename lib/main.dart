@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_github_search_bloc/pages/details_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'blocs/search_bloc.dart';
+import 'models/search_item_model.dart';
+import 'models/search_result_model.dart';
 
 void main() => runApp(MyApp());
 
@@ -62,8 +65,32 @@ class _MyHomePageState extends State<MyHomePage> {
               borderRadius: BorderRadius.all(Radius.circular(10.0)),
               color: Colors.black.withOpacity(0.7),
             ),
-            child: ListView(
-              children: <Widget>[_searchField()],
+            child: Column(
+              children: <Widget>[
+                _searchField(),
+                Expanded(
+                  child: StreamBuilder<SearchResultModel>(
+                      stream: _searchBloc.apiResult,
+                      builder: (context, snapshot) {
+                        if(!snapshot.hasData){
+                          return Center(child: CircularProgressIndicator(),);
+                        } else if(snapshot.data.items == null){
+                          return Center(
+                            child: Text("No projects found!"),
+                          );
+                        }
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: ClampingScrollPhysics(),
+                          itemCount: snapshot.data.items.length,
+                          itemBuilder: (context, index) {
+                            SearchItemModel item = snapshot.data.items[index];
+                            return buildItems(item);
+                          },
+                        );
+                      }),
+                )
+              ],
             ),
           ),
         ));
@@ -71,25 +98,47 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _searchField() {
     return Padding(
-      padding: EdgeInsets.all(10),
-      child: Material(
-        elevation: 2,
-        shadowColor: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-        child: TextField(
-          cursorColor: Colors.black87,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: "Enter a repository name",
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-            suffixIcon: Material(
-              elevation: 0.0,
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              child: Icon(Icons.search, color: Colors.black87,),
-            )
+        padding: EdgeInsets.all(10),
+        child: Material(
+          color: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          child: TextField(
+            onChanged: _searchBloc.outSearchSink.add,
+            cursorColor: Colors.black87,
+            decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: "Enter a repository name",
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+                suffixIcon: Material(
+                  elevation: 0.0,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Icon(
+                    Icons.search,
+                    color: Colors.black87,
+                  ),
+                )),
           ),
+        ));
+  }
+
+  Widget buildItems(SearchItemModel item) {
+    return ListTile(
+      leading: Hero(
+        tag: item.url,
+        child: CircleAvatar(
+          backgroundColor: Colors.transparent,
+          backgroundImage: NetworkImage(item?.avatarUrl ??
+              "https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/VCHXZQKsxil3lhgr4/animation-loading-circle-icon-on-white-background-with-alpha-channel-4k-video_sjujffkcde_thumbnail-full01.png"),
         ),
-      )
+      ),
+      title: Text(item?.fullname ?? "title", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),),
+      subtitle: Text(item?.url ?? "url", style: TextStyle(color: Colors.grey),),
+      onTap: (){
+        Navigator.push(context, MaterialPageRoute(builder: (context) => DetailsPage(item: item,)));
+      },
     );
   }
 }
